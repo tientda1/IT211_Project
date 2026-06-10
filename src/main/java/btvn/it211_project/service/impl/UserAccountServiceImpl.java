@@ -5,6 +5,7 @@ import btvn.it211_project.domain.UserAccount;
 import btvn.it211_project.dto.request.StudentRegistrationRequest;
 import btvn.it211_project.dto.request.UserUpsertRequest;
 import btvn.it211_project.dto.response.UserResponse;
+import btvn.it211_project.exception.BusinessRuleException;
 import btvn.it211_project.exception.DuplicateResourceException;
 import btvn.it211_project.exception.ResourceNotFoundException;
 import btvn.it211_project.repository.UserAccountRepository;
@@ -120,6 +121,59 @@ public class UserAccountServiceImpl implements UserAccountService {
     public UserAccount getRequiredUser(Long id) {
         return userAccountRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserAccount getUserByEmail(String email) {
+        return userAccountRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+    }
+
+    @Override
+    public void changePassword(Long userId, String currentPassword, String newPassword) {
+        UserAccount user = getRequiredUser(userId);
+        
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new BusinessRuleException("Current password is incorrect");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userAccountRepository.save(user);
+    }
+
+    @Override
+    public void resetPassword(String email, String newPassword) {
+        UserAccount user = getUserByEmail(email);
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userAccountRepository.save(user);
+    }
+
+    @Override
+    public void updateRefreshToken(Long userId, String refreshToken) {
+        UserAccount user = getRequiredUser(userId);
+        user.setRefreshToken(refreshToken);
+        userAccountRepository.save(user);
+    }
+
+    @Override
+    public void revokeToken(Long userId) {
+        UserAccount user = getRequiredUser(userId);
+        user.setRefreshToken(null);
+        userAccountRepository.save(user);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserAccount findByEmailAndPassword(String email, String password) {
+        UserAccount user = userAccountRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new ResourceNotFoundException("Invalid credentials");
+        }
+
+        return user;
     }
 
     private UserResponse toResponse(UserAccount user) {

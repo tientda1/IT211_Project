@@ -48,6 +48,9 @@ public class UserAccount {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Column(length = 512)
+    private String refreshToken;
+
     public UserAccount(String fullName, String email, String password, String phone, Role role) {
         this.fullName = fullName;
         this.email = email;

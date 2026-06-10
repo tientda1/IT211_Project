@@ -23,4 +23,16 @@ public interface UserAccountService {
     Page<UserResponse> searchUsers(String keyword, Role role, Boolean active, Pageable pageable);
 
     UserAccount getRequiredUser(Long id);
+
+    UserAccount getUserByEmail(String email);
+
+    void changePassword(Long userId, String currentPassword, String newPassword);
+
+    void resetPassword(String email, String newPassword);
+
+    void updateRefreshToken(Long userId, String refreshToken);
+
+    void revokeToken(Long userId);
+
+    UserAccount findByEmailAndPassword(String email, String password);
 }
