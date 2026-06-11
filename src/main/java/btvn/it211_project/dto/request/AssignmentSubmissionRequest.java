@@ -1,6 +1,7 @@
 package btvn.it211_project.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class AssignmentSubmissionRequest {
 
-    @NotBlank(message = "Assignment ID is required")
+    @NotNull(message = "Assignment ID is required")
     private Long assignmentId;
 
     @NotBlank(message = "Submission content (GitHub link or file path) is required")
