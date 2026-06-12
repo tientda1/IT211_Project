@@ -17,9 +17,9 @@ public class DataInitializer {
 
     @Bean
     public CommandLineRunner seedDemoData(UserAccountRepository userAccountRepository,
-                                          CourseRepository courseRepository) {
+                                          CourseRepository courseRepository,
+                                          PasswordEncoder passwordEncoder) {
         return args -> {
-            PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
 
             if (userAccountRepository.count() == 0) {
                 List<UserAccount> users = List.of(

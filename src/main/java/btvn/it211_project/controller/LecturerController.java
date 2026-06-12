@@ -7,14 +7,13 @@ import btvn.it211_project.dto.response.AssignmentSubmissionResponse;
 import btvn.it211_project.dto.response.LectureMaterialResponse;
 import btvn.it211_project.service.AssignmentSubmissionService;
 import btvn.it211_project.service.LectureMaterialService;
-import btvn.it211_project.util.JwtTokenProvider;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,15 +24,12 @@ public class LecturerController {
 
     private final AssignmentSubmissionService submissionService;
     private final LectureMaterialService materialService;
-    private final JwtTokenProvider jwtTokenProvider;
 
     public LecturerController(
             AssignmentSubmissionService submissionService,
-            LectureMaterialService materialService,
-            JwtTokenProvider jwtTokenProvider) {
+            LectureMaterialService materialService) {
         this.submissionService = submissionService;
         this.materialService = materialService;
-        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     /**
@@ -42,17 +38,9 @@ public class LecturerController {
     @PostMapping("/grade/{submissionId}")
     public ResponseEntity<ApiResponse<AssignmentSubmissionResponse>> gradeSubmission(
             @PathVariable Long submissionId,
-            @Valid @RequestBody GradingRequest request,
-            HttpServletRequest httpRequest) {
+            @Valid @RequestBody GradingRequest request) {
 
-        Long lecturerId = extractUserIdFromToken(httpRequest);
-        if (lecturerId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(ApiResponse.<AssignmentSubmissionResponse>builder()
-                            .message("Invalid or missing token")
-                            .build());
-        }
-
+        Long lecturerId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         AssignmentSubmissionResponse response = submissionService.gradeSubmission(submissionId, lecturerId, request);
 
         return ResponseEntity.ok(ApiResponse.<AssignmentSubmissionResponse>builder()
@@ -114,17 +102,9 @@ public class LecturerController {
      */
     @PostMapping("/materials/upload")
     public ResponseEntity<ApiResponse<LectureMaterialResponse>> uploadMaterial(
-            @Valid @RequestBody LectureMaterialUploadRequest request,
-            HttpServletRequest httpRequest) {
+            @Valid @RequestBody LectureMaterialUploadRequest request) {
 
-        Long lecturerId = extractUserIdFromToken(httpRequest);
-        if (lecturerId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(ApiResponse.<LectureMaterialResponse>builder()
-                            .message("Invalid or missing token")
-                            .build());
-        }
-
+        Long lecturerId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         LectureMaterialResponse response = materialService.uploadMaterial(lecturerId, request);
 
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -212,33 +192,13 @@ public class LecturerController {
      * Get my uploaded materials
      */
     @GetMapping("/materials/my-materials")
-    public ResponseEntity<ApiResponse<List<LectureMaterialResponse>>> getMyMaterials(
-            HttpServletRequest httpRequest) {
-
-        Long lecturerId = extractUserIdFromToken(httpRequest);
-        if (lecturerId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(ApiResponse.<List<LectureMaterialResponse>>builder()
-                            .message("Invalid or missing token")
-                            .build());
-        }
-
+    public ResponseEntity<ApiResponse<List<LectureMaterialResponse>>> getMyMaterials() {
+        Long lecturerId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         List<LectureMaterialResponse> materials = materialService.getMaterialsByLecturer(lecturerId);
 
         return ResponseEntity.ok(ApiResponse.<List<LectureMaterialResponse>>builder()
                 .message("Materials retrieved successfully")
                 .data(materials)
                 .build());
-    }
-
-    private Long extractUserIdFromToken(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            if (jwtTokenProvider.isTokenValid(token)) {
-                return jwtTokenProvider.extractUserId(token);
-            }
-        }
-        return null;
     }
 }

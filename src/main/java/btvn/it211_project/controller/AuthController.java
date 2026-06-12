@@ -15,6 +15,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -105,24 +106,15 @@ public class AuthController {
      * FR-03: Logout (Revoke Token)
      */
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<Void>> logout(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            Long userId = jwtTokenProvider.extractUserId(token);
+    public ResponseEntity<ApiResponse<Void>> logout() {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-            // Revoke the refresh token
-            userAccountService.revokeToken(userId);
+        // Revoke the refresh token
+        userAccountService.revokeToken(userId);
 
-            return ResponseEntity.ok(ApiResponse.<Void>builder()
-                    .message("Logout successful")
-                    .build());
-        }
-
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.<Void>builder()
-                        .message("No valid token found")
-                        .build());
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
+                .message("Logout successful")
+                .build());
     }
 
     /**
@@ -130,33 +122,23 @@ public class AuthController {
      */
     @PostMapping("/change-password")
     public ResponseEntity<ApiResponse<Void>> changePassword(
-            @Valid @RequestBody ChangePasswordRequest request,
-            HttpServletRequest httpRequest) {
+            @Valid @RequestBody ChangePasswordRequest request) {
 
-        String authHeader = httpRequest.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            Long userId = jwtTokenProvider.extractUserId(token);
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-            // Verify passwords match
-            if (!request.getNewPassword().equals(request.getConfirmPassword())) {
-                return ResponseEntity.badRequest()
-                        .body(ApiResponse.<Void>builder()
-                                .message("New password and confirmation password do not match")
-                                .build());
-            }
-
-            userAccountService.changePassword(userId, request.getCurrentPassword(), request.getNewPassword());
-
-            return ResponseEntity.ok(ApiResponse.<Void>builder()
-                    .message("Password changed successfully")
-                    .build());
+        // Verify passwords match
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.<Void>builder()
+                            .message("New password and confirmation password do not match")
+                            .build());
         }
 
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.<Void>builder()
-                        .message("No valid token found")
-                        .build());
+        userAccountService.changePassword(userId, request.getCurrentPassword(), request.getNewPassword());
+
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
+                .message("Password changed successfully")
+                .build());
     }
 
     /**

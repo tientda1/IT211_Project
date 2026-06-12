@@ -11,6 +11,7 @@ import btvn.it211_project.exception.DuplicateResourceException;
 import btvn.it211_project.exception.ResourceNotFoundException;
 import btvn.it211_project.repository.EnrollmentRepository;
 import btvn.it211_project.repository.UserAccountRepository;
+import btvn.it211_project.service.CourseService;
 import btvn.it211_project.service.EnrollmentService;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,11 +24,11 @@ public class EnrollmentServiceImpl implements EnrollmentService {
 
     private final EnrollmentRepository enrollmentRepository;
     private final UserAccountRepository userAccountRepository;
-    private final CourseServiceImpl courseService;
+    private final CourseService courseService;
 
     public EnrollmentServiceImpl(EnrollmentRepository enrollmentRepository,
                                  UserAccountRepository userAccountRepository,
-                                 CourseServiceImpl courseService) {
+                                 CourseService courseService) {
         this.enrollmentRepository = enrollmentRepository;
         this.userAccountRepository = userAccountRepository;
         this.courseService = courseService;
@@ -52,9 +53,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
             throw new DuplicateResourceException("Student already enrolled in this course");
         }
 
-        long currentEnrollmentCount = enrollmentRepository.findAll().stream()
-                .filter(enrollment -> enrollment.getCourse().getId().equals(course.getId()))
-                .count();
+        long currentEnrollmentCount = enrollmentRepository.countByCourseId(course.getId());
         if (currentEnrollmentCount >= course.getMaxStudents()) {
             throw new BusinessRuleException("Course is full");
         }

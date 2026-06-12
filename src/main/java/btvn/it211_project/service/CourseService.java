@@ -1,5 +1,6 @@
 package btvn.it211_project.service;
 
+import btvn.it211_project.domain.Course;
 import btvn.it211_project.dto.request.CourseUpsertRequest;
 import btvn.it211_project.dto.response.CourseResponse;
 import org.springframework.data.domain.Page;
@@ -16,4 +17,6 @@ public interface CourseService {
     CourseResponse getCourseById(Long id);
 
     Page<CourseResponse> searchCourses(String keyword, Pageable pageable);
+
+    Course getRequiredCourse(Long id);
 }

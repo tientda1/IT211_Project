@@ -88,6 +88,7 @@ public class CourseServiceImpl implements CourseService {
         return pageResult.map(this::toResponse);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Course getRequiredCourse(Long id) {
         return courseRepository.findById(id)
@@ -95,9 +96,7 @@ public class CourseServiceImpl implements CourseService {
     }
 
     private CourseResponse toResponse(Course course) {
-        long enrolledCount = enrollmentRepository.findAll().stream()
-                .filter(enrollment -> enrollment.getCourse().getId().equals(course.getId()))
-                .count();
+        long enrolledCount = enrollmentRepository.countByCourseId(course.getId());
 
         return CourseResponse.builder()
                 .id(course.getId())
