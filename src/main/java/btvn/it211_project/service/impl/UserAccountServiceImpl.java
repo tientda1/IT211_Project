@@ -10,7 +10,9 @@ import btvn.it211_project.exception.DuplicateResourceException;
 import btvn.it211_project.exception.ResourceNotFoundException;
 import btvn.it211_project.repository.UserAccountRepository;
 import btvn.it211_project.service.UserAccountService;
+
 import java.util.Objects;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -134,7 +136,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Override
     public void changePassword(Long userId, String currentPassword, String newPassword) {
         UserAccount user = getRequiredUser(userId);
-        
+
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
             throw new BusinessRuleException("Current password is incorrect");
         }
@@ -169,7 +171,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     public UserAccount findByEmailAndPassword(String email, String password) {
         UserAccount user = userAccountRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        
+
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new ResourceNotFoundException("Invalid credentials");
         }

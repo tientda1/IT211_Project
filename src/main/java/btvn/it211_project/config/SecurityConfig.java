@@ -34,17 +34,17 @@ public class SecurityConfig {
                         // Public endpoints
                         .requestMatchers("/api/v1/auth/login", "/api/v1/auth/refresh", "/api/v1/auth/forgot-password", "/api/v1/students/register").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
-                        
+
                         // Admin endpoints
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                        
+
                         // Lecturer endpoints
                         .requestMatchers("/api/v1/lecturer/**").hasRole("LECTURER")
-                        
+
                         // Student endpoints
                         .requestMatchers("/api/v1/submissions/**").hasRole("STUDENT")
                         .requestMatchers("/api/v1/student/courses/**").hasRole("STUDENT")
-                        
+
                         // All other endpoints require authentication
                         .anyRequest().authenticated()
                 )
